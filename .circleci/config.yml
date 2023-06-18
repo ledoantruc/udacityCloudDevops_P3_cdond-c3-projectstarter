@@ -85,13 +85,11 @@ jobs:
             ## If the "npm audit fix" command above could not fix all critical vulnerabilities, try “npm audit fix --force” again
             npm audit fix --force
             npm audit --audit-level=critical
-        - slack/notify:
-          event: fail
-          template: basic_fail_1
 
   scan-backend:
     docker:
       - image: circleci/node:13.8.0
+      # - image: cimg/node:20.3.0 # image for test slack notify
     steps:
       - checkout
       - restore_cache:
@@ -107,11 +105,9 @@ jobs:
             ## If the "npm audit fix" command above could not fix all critical vulnerabilities, try “npm audit fix --force” again
             npm audit fix --force
             npm audit --audit-level=critical
-            exit 1 # test notify
-        - slack/notify:
+      - slack/notify:
           event: fail
           template: basic_fail_1
-
 
 workflows:
   default:
@@ -123,6 +119,7 @@ workflows:
       - test-backend:
           requires: [build-backend]
       - scan-backend:
+          context: UDACITY # setup this context to use for slack notify
           requires: [build-backend]
       - scan-frontend:
           requires: [build-frontend]
