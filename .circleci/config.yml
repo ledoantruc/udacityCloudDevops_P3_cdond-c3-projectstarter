@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  slack: circleci/slack@4.12.5
+
 jobs:
   build-frontend:
     docker:
@@ -63,6 +66,7 @@ jobs:
             npm install
             npm run test
 
+
   scan-frontend:
     docker:
       - image: circleci/node:13.8.0
@@ -81,6 +85,9 @@ jobs:
             ## If the "npm audit fix" command above could not fix all critical vulnerabilities, try “npm audit fix --force” again
             npm audit fix --force
             npm audit --audit-level=critical
+        - slack/notify:
+          event: fail
+          template: basic_fail_1
 
   scan-backend:
     docker:
@@ -100,6 +107,11 @@ jobs:
             ## If the "npm audit fix" command above could not fix all critical vulnerabilities, try “npm audit fix --force” again
             npm audit fix --force
             npm audit --audit-level=critical
+            exit 1 # test notify
+        - slack/notify:
+          event: fail
+          template: basic_fail_1
+
 
 workflows:
   default:
