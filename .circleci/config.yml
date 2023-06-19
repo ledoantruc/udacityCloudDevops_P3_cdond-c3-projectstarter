@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   slack: circleci/slack@4.12.5
+  python: circleci/python@2.1.1
 
 commands:
   destroy-environment:
@@ -141,21 +142,54 @@ jobs:
       - run:
           name: Ensure backend infrastructure exist
           command: |
-            aws cloudformation deploy --template-file .circleci/files/backend.yml --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" --tags project=udapeople
+            aws cloudformation deploy \
+              --template-file .circleci/files/backend.yml \
+              --tags project=udapeople \
+              --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" 
       - run:
           name: Ensure frontend infrastructure exist
           command: |
-            aws cloudformation deploy --template-file .circleci/files/frontend.yml --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  --tags project=udapeople
+            aws cloudformation deploy \
+              --tags project=udapeople \
+              --template-file .circleci/files/frontend.yml \
+              --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"
       - run:
           name: Add the EC2 instance IP to the Ansible inventory
           command: |
               BACKEND_PUBLIC_IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
               echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
               cat .circleci/ansible/inventory.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/.circleci/ansible/inventory.txt      
       - destroy-environment:
           id: ${CIRCLE_WORKFLOW_ID:0:7}
 
 
+  configure-infrastructure:
+    executor:
+      name: python/default
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+          - "c5:f6:00:9e:b4:56:43:d8:53:e2:3d:06:b3:5f:bb:20"
+      - python/install-packages:
+          args: ansible
+      - attach_workspace:
+          at: ~/    
+      - run:
+          name: Configure server
+          command: |
+            cd .circleci/ansible
+            cat inventory.txt
+            ansible-playbook -i inventory.txt configure-server.yml
+      - destroy-environment:
+          id: ${CIRCLE_WORKFLOW_ID:0:7}
+            
 workflows:
   default:
     jobs:
@@ -170,4 +204,8 @@ workflows:
           requires: [build-backend]
       - scan-frontend:
           requires: [build-frontend]
-      - deploy-infrastructure
+      - deploy-infrastructure:
+          requires: [test-frontend, test-backend, scan-frontend, scan-backend]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
+          
