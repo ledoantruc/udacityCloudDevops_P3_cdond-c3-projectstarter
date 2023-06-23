@@ -13,12 +13,23 @@
   apt:
     autoremove: yes
 
-- name: "Install dependencies"
+- name: "Install npm and tar"
   become: true
   apt:
-    name: ["nodejs", "npm", "tar"]
+    name: ["npm", "tar"]
     state: "latest"
     update_cache: yes
+
+- name: "install n"
+  become: yes
+  npm:
+    name: n
+    global: yes
+    production: yes
+
+- name: "install nodejs 13.8.0"
+  become: yes
+  shell: n 13.8.0
 
 - name: "Install pm2"
   become: true
