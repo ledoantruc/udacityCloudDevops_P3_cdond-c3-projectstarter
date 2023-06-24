@@ -434,9 +434,9 @@ jobs:
             if [[ "$CurrentWorkflowID" != "$oldWorkflowID" ]]
             then
               echo "Deleting old version"
-              aws s3 rm "s3://udapeople-${oldWorkflowID}" --recursive --output text
-              aws cloudformation delete-stack --stack-name "udapeople-frontend-${oldWorkflowID}" --output text
-              aws cloudformation delete-stack --stack-name "udapeople-backend-${oldWorkflowID}" --output text
+              aws s3 rm s3://udapeople-${oldWorkflowID} --recursive --output text
+              aws cloudformation delete-stack --stack-name udapeople-frontend-${oldWorkflowID} --output text
+              aws cloudformation delete-stack --stack-name udapeople-backend-${oldWorkflowID} --output text
               echo "Deleted old version $oldWorkflowID!=$CurrentWorkflowID"
             else
               echo "No need to cleanup"
