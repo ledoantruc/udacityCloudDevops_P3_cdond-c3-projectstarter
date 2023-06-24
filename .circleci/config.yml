@@ -373,7 +373,7 @@ jobs:
             if curl -sk ${URL} | grep "Welcome"
             then
               # Change this to 0 after the job fails
-              exit 1
+              exit 0
             else
               exit 1
             fi
@@ -439,4 +439,3 @@ workflows:
       - cloudfront-update:
           requires: [smoke-test]
 
-          
