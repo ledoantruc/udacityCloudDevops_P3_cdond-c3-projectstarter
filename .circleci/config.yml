@@ -403,7 +403,7 @@ jobs:
             aws cloudformation deploy \
                       --template-file .circleci/files/cloudfront.yml \
                       --stack-name InitialStack \
-                      --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
+                      --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
                       --tags project=udapeople
 
             echo oldWorkflowID     is $oldWorkflowID
@@ -422,31 +422,24 @@ jobs:
       - run:
           name: Remove old stacks and files
           command: |
-            echo "Fetch the Old workflow ID"
-            export OldWorkflowID=$(aws cloudformation \
-                      list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-                      --no-paginate --output text)
-
+            echo "Fetch the Old workflow ID from kvdb.io"
+            KVDB_BUCKET_ID="RqV74qW577WGEvvGr76j8z"
+            export oldWorkflowID=$(curl --insecure https://kvdb.io/${KVDB_BUCKET_ID}/oldWorkflowID)
             export CurrentWorkflowID=${CIRCLE_WORKFLOW_ID:0:7}
 
-            echo OldWorkflowID: "${OldWorkflowID}"
+            echo oldWorkflowID: "${oldWorkflowID}"
             echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"
-
-            echo "Fetch the stack names"    
-            export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
-                      --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
-            echo Stack names: "${STACKS[@]}"
  
             echo "Remove old stacks and files"
-            if [[ "$CurrentWorkflowID" != "$OldWorkflowID" ]]
+            if [[ "$CurrentWorkflowID" != "$oldWorkflowID" ]]
             then
-              echo "Deleting old version $OldWorkflowID!=$CurrentWorkflowID"
-              aws s3 rm "s3://udapeople-${OldWorkflowID}" --recursive --output text
-              aws cloudformation delete-stack --stack-name "udapeople-frontend-${OldWorkflowID}" --output text
-              aws cloudformation delete-stack --stack-name "udapeople-backend-${OldWorkflowID}" --output text
-              echo "Deleted old version $OldWorkflowID!=$CurrentWorkflowID"
+              echo "Deleting old version"
+              aws s3 rm "s3://udapeople-${oldWorkflowID}" --recursive --output text
+              aws cloudformation delete-stack --stack-name "udapeople-frontend-${oldWorkflowID}" --output text
+              aws cloudformation delete-stack --stack-name "udapeople-backend-${oldWorkflowID}" --output text
+              echo "Deleted old version $oldWorkflowID!=$CurrentWorkflowID"
             else
-              echo "No need to do. $OldWorkflowID==$CurrentWorkflowID"
+              echo "No need to cleanup"
             fi
       - destroy-environment:
           id: ${CIRCLE_WORKFLOW_ID:0:7}   

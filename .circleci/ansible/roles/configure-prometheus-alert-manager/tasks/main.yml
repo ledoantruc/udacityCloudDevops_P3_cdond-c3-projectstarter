@@ -1,0 +1,36 @@
+
+- name: "Creates directory"
+  become: yes
+  file:
+    path: "/tmp/alertmanager"
+    state: "directory"
+    mode: 0755
+
+- name: "Creates directory"
+  become: yes
+  file:
+    path: "/var/lib/alertmanager"
+    state: "directory"
+    mode: 0755
+
+- name: "download alert manager and unarchive"
+  unarchive:
+    src: https://github.com/prometheus/alertmanager/releases/download/v0.23.0/alertmanager-0.23.0.linux-amd64.tar.gz
+    dest: /tmp/alertmanager
+    remote_src: yes
+
+- name: "move binary to /usr/local/bin."
+  become: true
+  copy:
+    src: /tmp/alertmanager/alertmanager-0.21.0.linux-amd64/alertmanager
+    dest: /usr/local/bin
+    remote_src: yes
+    mode: '0777'
+
+- name: "move binary to /usr/local/bin."
+  become: true
+  copy:
+    src: /tmp/alertmanager/alertmanager-0.21.0.linux-amd64/amtool
+    dest: /usr/local/bin
+    remote_src: yes
+    mode: '0777'
