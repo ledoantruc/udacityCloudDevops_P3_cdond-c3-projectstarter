@@ -380,7 +380,7 @@ jobs:
             if curl -sk ${URL} | grep "Welcome"
             then
               # Change this to 0 after the job fails
-              exit 1
+              exit 0
             else
               exit 1
             fi
@@ -444,14 +444,14 @@ jobs:
               aws s3 rm s3://udapeople-${oldWorkflowID} --recursive --output text
               aws cloudformation delete-stack --stack-name udapeople-frontend-${oldWorkflowID} --output text
               aws cloudformation delete-stack --stack-name udapeople-backend-${oldWorkflowID} --output text
-              echo "Deleted old version $oldWorkflowID!=$CurrentWorkflowID"
+              echo "Deleted old version"
             else
               echo "No need to cleanup"
             fi
-      - destroy-environment:
-          id: ${CIRCLE_WORKFLOW_ID:0:7}   
-      - revert-migrations:
-          workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
+      # - destroy-environment:
+      #     id: ${CIRCLE_WORKFLOW_ID:0:7}   
+      # - revert-migrations:
+      #     workflow_id: ${CIRCLE_WORKFLOW_ID:0:7}
 
           
 workflows:
@@ -516,4 +516,3 @@ workflows:
           filters:
             branches:
               only: [master]          
-      
