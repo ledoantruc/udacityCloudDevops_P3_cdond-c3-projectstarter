@@ -340,13 +340,17 @@ jobs:
 
   smoke-test:
     docker:
-      - image: amazon/aws-cli
+      # - image: amazon/aws-cli
+      - image: circleci/node:13.8.0
     steps:
       - checkout
       - run:
           name: Install dependencies
           command: |
-            yum install tar gzip curl nodejs npm -y
+            sudo apt-get install tar gzip curl -y
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install            
 
       - run:
           name: Backend smoke test.
@@ -360,8 +364,8 @@ jobs:
             export API_URL="http://${BACKEND_PUBLIC_IP}:3030"
             echo ${API_URL}
 
-            echo "Sleeping 5m to wait for server up"
-            sleep 300
+            echo "Sleeping 2m to wait for server up"
+            sleep 120
             if curl -k "${API_URL}/api/status" | grep "ok"
             then
               exit 0
@@ -376,7 +380,7 @@ jobs:
             if curl -sk ${URL} | grep "Welcome"
             then
               # Change this to 0 after the job fails
-              exit 0
+              exit 1
             else
               exit 1
             fi
